@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  category    String
+  price       Decimal  @db.Decimal(10,2)
+  currency    String   @default("USD")
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Order {
+  id        String           @id @default(cuid())
+  ppOrderId String?          @unique
+  total     Decimal          @db.Decimal(10,2)
+  currency  String           @default("USD")
+  state     String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  items     OrderItem[]
+  payments  PaymentAttempt[]
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  name      String
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10,2)
+  currency  String  @default("USD")
+}
+
+model PaymentAttempt {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  status    String
+  amount    Decimal  @db.Decimal(10,2)
+  currency  String   @default("USD")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  orderId   String?
+  type      String
+  message   String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}

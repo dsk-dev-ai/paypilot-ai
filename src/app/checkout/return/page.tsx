@@ -1,45 +1,104 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Card, Badge, Spinner, SectionTitle } from "@/components/ui/Card";
+
+type Result = { alreadyCaptured?: boolean; order?: { id: string; state: string; totalMinor: number; currency: string }; error?: { message?: string } | string };
 
 function ReturnContent() {
   const params = useSearchParams();
-  const orderId = params.get("token") || params.get("orderId");
-  const [status, setStatus] = useState<string>("loading");
-  const [result, setResult] = useState<unknown>(null);
+  const token = params.get("token");
+  const orderId = params.get("orderId");
+  const [result, setResult] = useState<Result | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState<string>("Verifying payment with PayPal…");
 
   useEffect(() => {
+    let cancelled = false;
     async function capture() {
-      if (!orderId) { setStatus("missing_order"); return; }
+      if (!orderId || !token) {
+        if (!cancelled) {
+          setMessage("Missing PayPal token or order id in the return URL.");
+          setFailed(true);
+          setLoading(false);
+        }
+        return;
+      }
       try {
-        const res = await fetch("/api/orders/capture", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId }) });
-        const data = await res.json();
-        if (!res.ok) { setStatus("error"); setResult(data); return; }
-        setStatus(data.alreadyCaptured ? "already_captured" : "captured");
-        setResult(data);
-      } catch (e: unknown) {
-        setStatus("error");
-        setResult({ error: e instanceof Error ? e.message : "Failed" });
+        const res = await fetch("/api/checkout/paypal/capture", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId, paypalOrderId: token }),
+        });
+        const data = (await res.json()) as Result;
+        if (cancelled) return;
+        if (!res.ok) {
+          setFailed(true);
+          setMessage(
+            typeof data.error === "object" && data.error?.message
+              ? data.error.message
+              : "PayPal verification failed."
+          );
+          setResult(data);
+        } else {
+          setResult(data);
+          setMessage(
+            data.alreadyCaptured
+              ? "Order was already captured — nothing was charged twice."
+              : "Payment captured and verified with PayPal (sandbox)."
+          );
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setFailed(true);
+          setMessage(e instanceof Error ? e.message : "Verification failed");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
-    capture();
-  }, [orderId]);
+    void capture();
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId, token]);
 
   return (
-    <div className="rounded-xl border border-[#20284a] bg-[#121a33]/60 p-6 shadow-sm backdrop-blur space-y-3">
-      {status==="loading" && <p className="text-sm text-[#9aa3c0]">Verifying and capturing payment...</p>}
-      {status==="captured" && <><p className="text-sm text-green-400 font-medium">Payment completed (Sandbox)</p><p className="text-sm text-[#9aa3c0]">Captured after approval and server verification.</p></>}
-      {status==="already_captured" && <><p className="text-sm text-green-400 font-medium">Order already completed</p></>}
-      {status==="error" && <><p className="text-sm text-red-400 font-medium">Verification failed</p><p className="text-sm text-[#9aa3c0]">{typeof result==="object"&&result&&"error" in result ? String((result as Record<string,unknown>).error):"Failed"}</p></>}
-      {status==="missing_order" && <p className="text-sm text-red-400">Missing order token</p>}
-      {orderId && <p className="text-xs text-[#9aa3c0]">PayPal Order ID: {orderId}</p>}
-      <div className="flex gap-2"><Link href="/orders" className="rounded-lg border border-[#20284a] px-3 py-1.5 text-sm text-white">Orders</Link><Link href="/" className="rounded-lg border border-[#20284a] px-3 py-1.5 text-sm text-white">Dashboard</Link></div>
-    </div>
+    <Card className="max-w-xl space-y-4 p-6">
+      <div className="flex items-center gap-2">
+        {loading ? <Spinner /> : null}
+        <h2 className="text-lg font-semibold">{loading ? "Verifying…" : failed ? "Verification failed" : "Payment verified"}</h2>
+        {!loading ? <Badge tone={failed ? "danger" : "success"}>{failed ? "FAILED" : "PAID"}</Badge> : null}
+      </div>
+      <p className="text-sm text-muted">{message}</p>
+      {result?.order ? (
+        <p className="text-xs text-faint">
+          Mandate order {result.order.id} · state {result.order.state}
+        </p>
+      ) : null}
+      {token ? <p className="text-[11px] text-faint">PayPal order: {token}</p> : null}
+      <div className="flex gap-2">
+        <Link href="/orders" className="rounded-lg border border-line px-3 py-1.5 text-sm text-muted hover:border-accent hover:text-accent">
+          Orders
+        </Link>
+        <Link href="/checkout" className="rounded-lg border border-line px-3 py-1.5 text-sm text-muted hover:border-accent hover:text-accent">
+          Checkout
+        </Link>
+      </div>
+    </Card>
   );
 }
 
 export default function CheckoutReturnPage() {
-  return <div className="space-y-4"><div><h2 className="text-2xl font-semibold tracking-tight text-white">Payment Return</h2><p className="text-sm text-[#9aa3c0]">Status verified server-side.</p></div><Suspense fallback={<div className="text-sm text-[#9aa3c0]">Loading...</div>}><ReturnContent/></Suspense></div>;
+  return (
+    <div className="space-y-6 animate-fade-up">
+      <SectionTitle title="PayPal return" subtitle="Capture happens only after PayPal reports buyer approval — verified server-side." />
+      <Suspense fallback={<div className="text-sm text-muted">Loading…</div>}>
+        <ReturnContent />
+      </Suspense>
+    </div>
+  );
 }

@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: paypilot-db
+    environment:
+      POSTGRES_USER: paypilot
+      POSTGRES_PASSWORD: paypilot
+      POSTGRES_DB: paypilot
+    ports:
+      - "5432:5432"
+    volumes:
+      - paypilot-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paypilot -d paypilot"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  paypilot-pgdata:

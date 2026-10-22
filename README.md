@@ -1,4 +1,4 @@
-# PayPilot AI
+# Mandate AI
 
 AI-powered commerce and payment orchestration platform for the PayPal AI Hackathon.
 

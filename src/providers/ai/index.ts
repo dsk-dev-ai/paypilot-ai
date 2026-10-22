@@ -1,8 +1,12 @@
+import { GeminiProvider, geminiConfigured } from "./gemini";
 import { DeterministicProvider } from "./deterministic";
-import { GeminiProvider } from "./gemini";
+import type { AIProvider } from "./types";
+import type { ProviderStatus } from "@/lib/core/provider";
 
-export function getAIProvider() {
-  const gem = new GeminiProvider();
-  if (gem.isConfigured()) return gem;
-  return new DeterministicProvider();
+export function getAIProvider(): AIProvider {
+  return geminiConfigured() ? new GeminiProvider() : new DeterministicProvider();
+}
+
+export function getAIStatus(): ProviderStatus {
+  return new GeminiProvider().getStatus();
 }

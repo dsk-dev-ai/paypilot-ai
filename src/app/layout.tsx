@@ -1,45 +1,70 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
+import { NavLinks, NavMenu, type NavItem } from "@/components/NavLinks";
+import { AmbientBackground } from "@/components/motion/AmbientBackground";
 
 export const metadata: Metadata = {
-  title: "PayPilot AI — Intelligent Commerce",
-  description: "Smarter shopping. Clearer decisions.",
+  title: "Mandate — Verifiable Agentic Checkout",
+  description:
+    "AI shopping agent whose purchases are bound to a human-approved, SHA-256 consent artifact and verified before PayPal capture.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+const primaryNav: NavItem[] = [
+  { href: "/search", label: "Search" },
+  { href: "/assistant", label: "Assistant" },
+  { href: "/plan", label: "Plan" },
+  { href: "/checkout", label: "Checkout" },
+  { href: "/orders", label: "Orders" },
+];
+
+const moreNav: NavItem[] = [
+  { href: "/mandate", label: "Policy" },
+  { href: "/wishlist", label: "Saved" },
+  { href: "/notifications", label: "Alerts" },
+  { href: "/account", label: "Account" },
+  { href: "/status", label: "Status" },
+  { href: "/help", label: "Help" },
+];
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
-      <body className="antialiased">
-        <div className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-[rgba(11,16,38,0.8)] bg-[rgba(11,16,38,0.95)] border-b border-[#20284a]">
-          <div className="mx-auto max-w-7xl px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[#4f9bff] to-[#7c3fff] flex items-center justify-center text-white font-semibold shadow-[0_0_80px_rgba(79,155,255,0.25)]">PP</div>
-              <div>
-                <h1 className="text-lg sm:text-xl font-semibold tracking-tight text-white">PayPilot AI</h1>
-                <p className="text-xs text-[#9aa3c0]">Intelligent Commerce · PayPal Sandbox</p>
-              </div>
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased" suppressHydrationWarning>
+        <AmbientBackground />
+        <header className="sticky top-0 z-40 border-b border-line glass animate-fade-in">
+          <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
+            <Link href="/" className="group flex shrink-0 items-center gap-2.5">
+              <span className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-accent via-accent-2 to-accent-3 text-sm font-bold text-white shadow-[0_4px_18px_rgba(109,141,255,0.45)] transition-transform duration-300 group-hover:scale-105">
+                M
+              </span>
+              <span className="hidden text-sm font-semibold tracking-tight sm:inline">
+                <span className="text-gradient">Mandate</span>
+              </span>
             </Link>
-            <nav className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm">
-              <Link href="/" className="px-3 py-1.5 rounded-lg text-[#e6e8ee] hover:bg-[#121a33] transition-colors">Discover</Link>
-              <Link href="/assistant" className="px-3 py-1.5 rounded-lg text-[#e6e8ee] hover:bg-[#121a33] transition-colors">AI Assistant</Link>
-              <Link href="/catalog" className="px-3 py-1.5 rounded-lg text-[#e6e8ee] hover:bg-[#121a33] transition-colors">Catalog</Link>
-              <Link href="/orders" className="px-3 py-1.5 rounded-lg text-[#e6e8ee] hover:bg-[#121a33] transition-colors">Orders</Link>
-              <Link href="/checkout" className="relative px-4 py-1.5 rounded-lg bg-gradient-to-r from-[#4f9bff] to-[#7c3fff] text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.995] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f9bff] animate-glow">
-                Checkout
-              </Link>
-            </nav>
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
+              <nav className="hidden min-w-0 items-center gap-0.5 overflow-x-auto md:flex md:gap-1">
+                <NavLinks items={primaryNav} />
+              </nav>
+              <NavMenu items={[...primaryNav, ...moreNav]} label="Menu" />
+            </div>
           </div>
-        </div>
-        <main className="mx-auto max-w-7xl px-4 py-8 animate-fade-up">{children}</main>
-        <footer className="border-t border-[#20284a] mt-12">
-          <div className="mx-auto max-w-7xl px-4 py-6 text-xs text-[#9aa3c0] flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>PayPilot AI — Demo only. PayPal Sandbox test payments. Prices in USD.</span>
-            <span>© 2026 Darshan Kachare</span>
+        </header>
+        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+        <footer className="mt-8 border-t border-line">
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-xs text-faint sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <p className="max-w-xl">
+              Mandate searches authorized sources and routes you to official retailers. Every purchase
+              is bound to a human-approved consent hash, and we never automate retailer logins or claim
+              cart changes we cannot verify.
+            </p>
+            <p className="flex items-center gap-2">
+              <Link href="/help" className="transition-colors hover:text-muted">
+                Help &amp; disclosures
+              </Link>
+              <span className="h-1 w-1 rounded-full bg-faint" />
+              <span>v1.0.0</span>
+            </p>
           </div>
         </footer>
       </body>

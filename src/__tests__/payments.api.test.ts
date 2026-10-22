@@ -1,4 +1,4 @@
-import { describe, test, expect, vi } from "vitest";
+import { describe, test, expect } from "vitest";
 
 describe("payments API guards", () => {
   test("missing credentials should be detectable", () => {

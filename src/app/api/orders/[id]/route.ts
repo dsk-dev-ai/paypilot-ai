@@ -1,16 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPayPalOrder } from "@/modules/payments/client";
+import { getSessionUserId } from "@/lib/db/session";
+import { isDbConfigured } from "@/lib/db/client";
+import { getOrder, listPaymentAttempts } from "@/lib/db/orders";
+import { listHandoffsForOrder } from "@/lib/db/handoffs";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const order = await getPayPalOrder(id);
-    return NextResponse.json(order);
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Failed";
-    return NextResponse.json({ error: msg }, { status: 500 });
+export const dynamic = "force-dynamic";
+
+export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  if (!isDbConfigured()) {
+    return NextResponse.json({ error: { code: "NOT_CONFIGURED", message: "Database is not configured." } }, { status: 503 });
   }
+  const { id } = await ctx.params;
+  const userId = await getSessionUserId();
+  const order = await getOrder(userId, id);
+  if (!order) {
+    return NextResponse.json({ error: { code: "NOT_FOUND", message: "Order not found" } }, { status: 404 });
+  }
+  const [paymentAttempts, handoffs] = await Promise.all([
+    listPaymentAttempts(order.id),
+    listHandoffsForOrder(userId, order.id),
+  ]);
+  return NextResponse.json({ order, paymentAttempts, handoffs });
 }

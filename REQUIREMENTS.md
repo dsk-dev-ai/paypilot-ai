@@ -1,4 +1,4 @@
-# Mandate — Requirements (v1.1.0)
+# PayPilot AI — Requirements (v1.1.0)
 
 How to run, test, and which API access is needed for each integration.
 

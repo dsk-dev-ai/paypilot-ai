@@ -1,17 +1,19 @@
-# Mandate AI
+# PayPilot AI
 
 AI-powered commerce and payment orchestration platform for the PayPal AI Hackathon.
 
 ## Features
 - Premium dark UI with animations
-- Trusted catalog (USD)
-- AI assistant with provider abstraction (Gemini/Groq) + deterministic fallback
+- Verifiable agentic checkout with consent artifacts
+- AI assistant with provider abstraction (Gemini) + deterministic fallback
 - Purchase flow with PayPal Sandbox (server-side, approval required, capture after verification)
-- Order listing from API
+- Multi-merchant plan management with per-merchant checkout routing
+- Order tracking and notifications
 - Health/status endpoint
 
 ## Tech Stack
-- Next.js (App Router), TypeScript, Tailwind CSS, Prisma (schema prepared), PostgreSQL (Supabase compatible)
+- Next.js 16 (App Router), TypeScript, Tailwind CSS v4, Motion, Prisma 6, PostgreSQL
+- Zod for validation
 
 ## Environment
 Copy `.env.example` to `.env.local` and fill server-only values. Never commit secrets.
@@ -20,7 +22,8 @@ Copy `.env.example` to `.env.local` and fill server-only values. Never commit se
 ```bash
 npm install
 cp .env.example .env.local
-npx prisma generate  # when DATABASE_URL is set
+export $(grep '^DATABASE_URL=' .env.local)
+npx prisma generate
 npx prisma migrate dev
 npm run dev
 ```
@@ -35,9 +38,12 @@ npm run build
 
 ## Security
 - Credentials server-only
-- Amount/currency verified against catalog
-- Order association required
-- No auto-capture
+- Every purchase bound to a human-approved SHA-256 consent artifact
+- Price changes invalidate consent and require re-approval
+- One intent per merchant, no merchant merging
+- PayPal only when configured and supported
+- External checkout never captures card details
+- No auto-capture; verification required
 - Redirects do not mark payment success
 
 ## License

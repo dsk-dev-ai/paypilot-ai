@@ -1,4 +1,4 @@
-# Mandate v1.1.0 Implementation Plan
+# PayPilot AI v1.1.0 Implementation Plan
 
 ## Current State
 - Next.js 16.4.2, TypeScript, Tailwind CSS

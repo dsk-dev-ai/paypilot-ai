@@ -5,9 +5,9 @@ import { NavLinks, NavMenu, type NavItem } from "@/components/NavLinks";
 import { AmbientBackground } from "@/components/motion/AmbientBackground";
 
 export const metadata: Metadata = {
-  title: "Mandate — Verifiable Agentic Checkout",
+  title: "PayPilot AI — Verifiable Agentic Checkout",
   description:
-    "AI shopping agent whose purchases are bound to a human-approved, SHA-256 consent artifact and verified before PayPal capture.",
+    "AI-powered commerce and payment orchestration platform for verifiable agentic checkout.",
 };
 
 const primaryNav: NavItem[] = [
@@ -36,10 +36,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
             <Link href="/" className="group flex shrink-0 items-center gap-2.5">
               <span className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-accent via-accent-2 to-accent-3 text-sm font-bold text-white shadow-[0_4px_18px_rgba(109,141,255,0.45)] transition-transform duration-300 group-hover:scale-105">
-                M
+                P
               </span>
               <span className="hidden text-sm font-semibold tracking-tight sm:inline">
-                <span className="text-gradient">Mandate</span>
+                PayPilot <span className="text-gradient">AI</span>
               </span>
             </Link>
             <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
@@ -54,7 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="mt-8 border-t border-line">
           <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-xs text-faint sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <p className="max-w-xl">
-              Mandate searches authorized sources and routes you to official retailers. Every purchase
+              PayPilot AI searches authorized sources and routes you to official retailers. Every purchase
               is bound to a human-approved consent hash, and we never automate retailer logins or claim
               cart changes we cannot verify.
             </p>

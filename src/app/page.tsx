@@ -56,7 +56,7 @@ export default function HomePage() {
         </Reveal>
         <Reveal delay={0.12}>
           <p className="mx-auto mt-6 max-w-xl text-base text-muted sm:text-lg">
-            Mandate searches authorized product sources, enforces your spending rules, and binds every
+            PayPilot AI searches authorized product sources, enforces your spending rules, and binds every
             purchase to a human-approved cart hash before PayPal capture — with every claim sourced.
           </p>
         </Reveal>

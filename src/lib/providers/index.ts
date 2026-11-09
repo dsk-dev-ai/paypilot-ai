@@ -10,10 +10,11 @@ let bootstrapped = false;
  */
 export async function ensureProvidersRegistered(): Promise<ProductProvider[]> {
   if (!bootstrapped) {
+    const { paypilotProvider } = await import("./paypilot");
     const { flipkartProvider } = await import("./flipkart");
     const { ebayProvider } = await import("./ebay");
     const { amazonProvider } = await import("./amazon");
-    for (const p of [flipkartProvider, ebayProvider, amazonProvider]) {
+    for (const p of [paypilotProvider, flipkartProvider, ebayProvider, amazonProvider]) {
       if (!listProviders().some((x) => x.id === p.id)) {
         registerProvider(p);
       }

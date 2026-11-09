@@ -10,6 +10,7 @@ import {
 import { createOrder, getOrder, transitionOrder, recordPaymentAttempt, listPaymentAttempts, canTransition } from "@/lib/db/orders";
 import { recordAuditEvent, listAuditEvents } from "@/lib/db/audit";
 import { createNotification, listNotifications, markNotificationRead } from "@/lib/db/notifications";
+import { fulfillOrder, getFulfillment } from "@/lib/db/fulfillments";
 import { newUserId } from "@/lib/db/session";
 import { parseMoney } from "@/lib/core/money";
 
@@ -146,6 +147,55 @@ describe.skipIf(!dbAvailable)("repository layer against live PostgreSQL", () => 
     expect(attempts[0].status).toBe("COMPLETED");
     expect(canTransition("PAID", "CANCELED")).toBe(false);
     expect(canTransition("CAPTURING", "PAID")).toBe(true);
+  });
+
+  test("digital fulfillment is idempotent and paypilot-only", async () => {
+    const order = await createOrder({
+      userId,
+      currency: "USD",
+      subtotalMinor: 1900,
+      totalMinor: 1900,
+      idempotencyKey: `test-${userId}-fulfill`,
+      items: [
+        {
+          title: "Agent Builder Starter Kit",
+          provider: "paypilot",
+          externalId: "agent-starter-kit",
+          canonicalUrl: "http://localhost:3000/store/agent-starter-kit",
+          quantity: 1,
+          unitPriceMinor: 1900,
+        },
+      ],
+    });
+    const first = await fulfillOrder(userId, order);
+    expect(first).not.toBeNull();
+    expect(first!.status).toBe("DELIVERED");
+    expect(first!.items[0].deliverableType).toBe("download");
+    expect(first!.items[0].licenseKey).toMatch(/^PP-/);
+    const second = await fulfillOrder(userId, order);
+    expect(second!.id).toBe(first!.id);
+    expect(second!.items[0].licenseKey).toBe(first!.items[0].licenseKey);
+    expect((await getFulfillment(userId, order.id))!.id).toBe(first!.id);
+
+    const external = await createOrder({
+      userId,
+      currency: "INR",
+      subtotalMinor: 1000,
+      totalMinor: 1000,
+      idempotencyKey: `test-${userId}-external`,
+      items: [
+        {
+          title: "Widget",
+          provider: "testprov",
+          externalId: "W2",
+          canonicalUrl: "https://example.com/w2",
+          quantity: 1,
+          unitPriceMinor: 1000,
+        },
+      ],
+    });
+    expect(await fulfillOrder(userId, external)).toBeNull();
+    expect(await getFulfillment(userId, external.id)).toBeNull();
   });
 
   test("audit events and notifications are user-scoped", async () => {

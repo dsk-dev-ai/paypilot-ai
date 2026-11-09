@@ -21,6 +21,8 @@ function item(overrides: Partial<PlanItemDTO> = {}): PlanItemDTO {
     priceMinor: 1999,
     currency: "USD",
     availability: "IN_STOCK",
+    region: "US",
+    attributes: {},
     quantity: 2,
     approvedPriceMinor: 1999,
     approvedAt: "2026-10-22T00:00:00.000Z",

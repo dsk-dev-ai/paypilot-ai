@@ -21,12 +21,24 @@ type OrderDetail = {
 };
 type Attempt = { id: string; provider: string; status: string; amountMinor: number; currency: string; failureCode: string | null; createdAt: string };
 type Handoff = { id: string; provider: string; url: string; state: string; createdAt: string };
+type Fulfillment = {
+  status: string;
+  deliveredAt: string;
+  items: Array<{
+    title: string;
+    quantity: number;
+    deliverableType: string;
+    licenseKey: string | null;
+    fileName: string | null;
+  }>;
+};
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [handoffs, setHandoffs] = useState<Handoff[]>([]);
+  const [fulfillment, setFulfillment] = useState<Fulfillment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +55,7 @@ export default function OrderDetailPage() {
         setOrder(data.order);
         setAttempts(data.paymentAttempts ?? []);
         setHandoffs(data.handoffs ?? []);
+        setFulfillment(data.fulfillment ?? null);
       })
       .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load order");
@@ -114,6 +127,33 @@ export default function OrderDetailPage() {
             ) : null}
           </Card>
 
+          {fulfillment ? (
+            <Card className="space-y-2 border-success/30 bg-success/5 p-5">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold">Digital delivery</h2>
+                <Badge tone="success">{fulfillment.status}</Badge>
+              </div>
+              <p className="text-[11px] text-faint">
+                Delivered {new Date(fulfillment.deliveredAt).toLocaleString()} — generated only after verified
+                PayPal capture.
+              </p>
+              <ul className="space-y-2">
+                {fulfillment.items.map((item, i) => (
+                  <li key={i} className="rounded-lg border border-line bg-panel/60 p-2.5">
+                    <p className="text-xs font-medium">
+                      {item.title} × {item.quantity}
+                    </p>
+                    <p className="text-[10px] text-faint">{item.deliverableType}</p>
+                    {item.licenseKey ? (
+                      <code className="mt-1 block text-[11px] text-accent">{item.licenseKey}</code>
+                    ) : null}
+                    {item.fileName ? <p className="text-[10px] text-faint">{item.fileName}</p> : null}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          ) : null}
+
           {handoffs.length > 0 ? (
             <Card className="space-y-2 p-5">
               <h2 className="text-sm font-semibold">Merchant handoffs</h2>
@@ -142,9 +182,14 @@ export default function OrderDetailPage() {
             </Card>
           ) : null}
 
-          <ButtonLink href="/orders" variant="secondary" size="sm">
-            ← All orders
-          </ButtonLink>
+          <div className="flex flex-wrap gap-2">
+            <ButtonLink href={`/verify?orderId=${order.id}`} variant="secondary" size="sm">
+              Verify receipt
+            </ButtonLink>
+            <ButtonLink href="/orders" variant="ghost" size="sm">
+              ← All orders
+            </ButtonLink>
+          </div>
         </div>
       </div>
     </div>

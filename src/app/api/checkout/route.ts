@@ -11,8 +11,9 @@ import { sha256Hex } from "@/lib/core/canonical";
 import { ensureProvidersRegistered } from "@/lib/providers";
 import { getProvider } from "@/lib/providers/registry";
 import { routeCheckout, type CheckoutIntent, type CheckoutPlanItem } from "@/lib/checkout/router";
-import { getPayPalStatus, PAYPAL_SUPPORTED_CURRENCIES } from "@/modules/payments/config";
+import { getPayPalStatus, getPayPalApproveUrl, PAYPAL_SUPPORTED_CURRENCIES } from "@/modules/payments/config";
 import { createPayPalOrder, getApproveUrl } from "@/modules/payments/client";
+import { getAppBaseUrl } from "@/lib/config/app";
 import { recordAuditEvent } from "@/lib/db/audit";
 import type { ProviderCapabilities } from "@/lib/core/provider";
 import { rateLimit } from "@/lib/http/api";
@@ -61,6 +62,7 @@ type CheckoutSummary = {
       orderState: string | null;
       handoffId: string | null;
       handoffState: string | null;
+      paypalOrderId: string | null;
       approveUrl: string | null;
     }
   >;
@@ -80,17 +82,31 @@ async function buildSummary(userId: string, plan: PlanDTO): Promise<CheckoutSumm
         o.items.some((it) => it.provider === intent.provider)
       );
       if (!order) {
-        return { ...intent, orderId: null, orderState: null, handoffId: null, handoffState: null, approveUrl: null };
+        return {
+          ...intent,
+          orderId: null,
+          orderState: null,
+          handoffId: null,
+          handoffState: null,
+          paypalOrderId: null,
+          approveUrl: null,
+        };
       }
       const handoffs = await listHandoffsForOrder(userId, order.id);
       const handoff = handoffs.find((h) => h.provider === intent.provider) ?? null;
+      const paypalOrderId =
+        intent.method === "PAYPILOT_PAYPAL" ? order.providerReference ?? null : null;
+      const canApprove =
+        paypalOrderId !== null &&
+        (order.state === "PENDING_APPROVAL" || order.state === "APPROVED");
       return {
         ...intent,
         orderId: order.id,
         orderState: order.state,
         handoffId: handoff?.id ?? null,
         handoffState: handoff?.state ?? null,
-        approveUrl: null,
+        paypalOrderId,
+        approveUrl: canApprove ? getPayPalApproveUrl(paypalOrderId) : null,
       };
     })
   );
@@ -310,6 +326,7 @@ export async function POST(req: NextRequest) {
         orderState: order.state,
         handoffId: handoff.id,
         handoffState: handoff.state,
+        paypalOrderId: null,
         approveUrl: null,
       });
     } else {
@@ -324,11 +341,15 @@ export async function POST(req: NextRequest) {
       if (!paypalOrderId) {
         try {
           const requestId = `mandate_${sha256Hex(`${plan.id}:${intent.provider}:${consent.contentHash}`).slice(0, 48)}`;
+          const base = getAppBaseUrl();
           const ppOrder = await createPayPalOrder(
             {
               amount: (subtotal / 100).toFixed(2),
               currency_code: intent.currency,
-              description: `Mandate plan ${plan.id} — ${intent.provider} (${intent.items.length} lines)`,
+              description: `PayPilot plan ${plan.id} — ${intent.provider} (${intent.items.length} lines)`,
+              brandName: "PayPilot AI",
+              returnUrl: `${base}/checkout/return?orderId=${encodeURIComponent(order.id)}`,
+              cancelUrl: `${base}/checkout?canceled=1`,
             },
             requestId
           );
@@ -372,7 +393,8 @@ export async function POST(req: NextRequest) {
         orderState: "PENDING_APPROVAL",
         handoffId: null,
         handoffState: null,
-        approveUrl,
+        paypalOrderId,
+        approveUrl: approveUrl ?? getPayPalApproveUrl(paypalOrderId),
       });
     }
   }

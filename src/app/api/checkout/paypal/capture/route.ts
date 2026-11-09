@@ -5,6 +5,9 @@ import { isDbConfigured } from "@/lib/db/client";
 import { getOrder, transitionOrder, recordPaymentAttempt, type OrderState } from "@/lib/db/orders";
 import { getConsent } from "@/lib/db/consents";
 import { appendLedgerEntry } from "@/lib/db/ledger";
+import { fulfillOrder, getFulfillment } from "@/lib/db/fulfillments";
+import { setPlanStatus } from "@/lib/db/plans";
+import { getDb } from "@/lib/db/client";
 import { sha256Hex } from "@/lib/core/canonical";
 import { getPayPalStatus } from "@/modules/payments/config";
 import { capturePayPalOrder } from "@/modules/payments/client";
@@ -64,7 +67,8 @@ export async function POST(req: NextRequest) {
     );
   }
   if (order.state === "PAID") {
-    return NextResponse.json({ alreadyCaptured: true, order });
+    const existingDelivery = await getFulfillment(userId, order.id).catch(() => null);
+    return NextResponse.json({ alreadyCaptured: true, order, fulfillment: existingDelivery });
   }
   if (!order.consentId || !order.consentHash) {
     return NextResponse.json(
@@ -121,6 +125,45 @@ export async function POST(req: NextRequest) {
       `Order ${order.id} was captured and verified in the PayPal ${getPayPalStatus().label.includes("production") ? "live" : "sandbox"} environment.`
     ).catch(() => undefined);
 
+    // Verified capture → instant digital delivery for the built-in store.
+    const paidOrder = updated ?? order;
+    const fulfillment = await fulfillOrder(userId, paidOrder).catch(() => null);
+    if (fulfillment) {
+      await createNotification(
+        userId,
+        "ORDER_FULFILLED",
+        "Your digital delivery is ready",
+        `${fulfillment.items.length} item(s) from the PayPilot Store are available on the order page.`
+      ).catch(() => undefined);
+      await appendLedgerEntry({
+        type: "ORDER_FULFILLED",
+        userId,
+        subjectId: order.id,
+        detail: {
+          orderId: order.id,
+          fulfillmentId: fulfillment.id,
+          items: fulfillment.items.map((it) => ({
+            externalId: it.externalId,
+            title: it.title,
+            quantity: it.quantity,
+            deliverableType: it.deliverableType,
+          })),
+        },
+      }).catch(() => undefined);
+    }
+
+    if (paidOrder.planId) {
+      const outstanding = await getDb().order.count({
+        where: {
+          planId: paidOrder.planId,
+          state: { notIn: ["PAID", "REFUNDED", "CANCELED", "FAILED"] },
+        },
+      });
+      if (outstanding === 0) {
+        await setPlanStatus(userId, paidOrder.planId, "CHECKED_OUT").catch(() => null);
+      }
+    }
+
     await appendLedgerEntry({
       type: "PAYMENT_CAPTURED",
       userId,
@@ -145,7 +188,7 @@ export async function POST(req: NextRequest) {
         consentHash: order.consentHash,
       },
     });
-    return NextResponse.json({ alreadyCaptured: result.alreadyCaptured, order: updated ?? order });
+    return NextResponse.json({ alreadyCaptured: result.alreadyCaptured, order: paidOrder, fulfillment });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Capture failed";
     await recordPaymentAttempt({

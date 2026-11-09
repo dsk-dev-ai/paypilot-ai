@@ -151,11 +151,18 @@ export default function CheckoutPage() {
   if (!plan || plan.status === "DRAFT") {
     return (
       <div className="space-y-6 animate-fade-up">
-        <SectionTitle title="Checkout" subtitle="Per-merchant checkout routing for your approved plan." />
+        <SectionTitle title="Checkout" subtitle="Verified payment for the exact cart you approved." />
         <EmptyState
           title="Nothing to check out yet"
-          body="Approve a shopping plan first. Mandate never charges you directly — each merchant is paid on that merchant's own checkout."
-          action={<ButtonLink href="/plan">Go to plan</ButtonLink>}
+          body="Approve a plan first. PayPilot Store orders are paid with real PayPal sandbox capture; external merchants open their own checkout."
+          action={
+            <div className="flex flex-wrap justify-center gap-2">
+              <ButtonLink href="/plan">Go to plan</ButtonLink>
+              <ButtonLink href="/agent" variant="secondary">
+                Ask the agent
+              </ButtonLink>
+            </div>
+          }
         />
       </div>
     );
@@ -165,7 +172,7 @@ export default function CheckoutPage() {
     <div className="space-y-6 animate-fade-up">
       <SectionTitle
         title="Checkout"
-        subtitle="One handoff per merchant. Mandate does not merge merchants and never sees your card details."
+        subtitle="The server recomputes your consent hash before creating any PayPal order. Card details never touch PayPilot."
         right={<Badge tone={plan.status === "CHECKED_OUT" ? "success" : "accent"}>{plan.status}</Badge>}
       />
 
@@ -273,8 +280,8 @@ export default function CheckoutPage() {
             {busy ? <Spinner /> : null} Start checkout routing
           </Button>
           <p className="text-xs text-faint">
-            Plan {plan.id} · subtotal {formatMinor(plan.subtotalMinor, plan.currency)} (estimates — shipping
-            and taxes are added by each merchant)
+            Plan {plan.id} · subtotal {formatMinor(plan.subtotalMinor, plan.currency)} · USD only for the
+            built-in store
           </p>
         </div>
       )}

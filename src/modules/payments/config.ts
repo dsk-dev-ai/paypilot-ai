@@ -41,6 +41,16 @@ export function getPayPalConfig() {
  * Capability `PAYPILOT_PAYPAL` is granted only when credentials are present;
  * it does not mean a live verification has succeeded yet.
  */
+/**
+ * Hosted buyer-approval URL for a PayPal order. Built from the order id so a
+ * page reload does not lose the approval link (the API `approve` link is
+ * equivalent but only available at creation time).
+ */
+export function getPayPalApproveUrl(paypalOrderId: string): string {
+  const host = isLive() ? "www.paypal.com" : "www.sandbox.paypal.com";
+  return `https://${host}/checkoutnow?token=${encodeURIComponent(paypalOrderId)}`;
+}
+
 export function getPayPalStatus(): ProviderStatus {
   const configured = !!(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET);
   const live = isLive();

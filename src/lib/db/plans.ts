@@ -14,6 +14,8 @@ export type PlanItemDTO = {
   availability: string;
   seller?: string;
   brand?: string;
+  region: string;
+  attributes: Record<string, string | number | boolean>;
   quantity: number;
   approvedPriceMinor: number | null;
   approvedAt: string | null;
@@ -51,6 +53,8 @@ type PlanItemRow = {
     availability: string;
     seller: string | null;
     brand: string | null;
+    region: string;
+    attributes: unknown;
     fetchedAt: Date;
   };
 };
@@ -70,6 +74,11 @@ function toItemDTO(row: PlanItemRow): PlanItemDTO {
     availability: row.listing.availability,
     seller: row.listing.seller ?? undefined,
     brand: row.listing.brand ?? undefined,
+    region: row.listing.region,
+    attributes:
+      row.listing.attributes && typeof row.listing.attributes === "object" && !Array.isArray(row.listing.attributes)
+        ? (row.listing.attributes as Record<string, string | number | boolean>)
+        : {},
     quantity: row.quantity,
     approvedPriceMinor: bigIntToNumber(row.approvedPriceMinor) ?? null,
     approvedAt: row.approvedAt?.toISOString() ?? null,
@@ -165,6 +174,34 @@ export async function addListingToPlan(
     });
   }
   await db.shoppingPlan.update({ where: { id: plan.id }, data: { updatedAt: new Date() } });
+  return loadPlan(plan.id) as Promise<PlanDTO>;
+}
+
+/**
+ * Replace the contents of the active draft plan with a freshly proposed set of
+ * items. Used by the AI agent so the plan exactly matches what the human is
+ * about to review and approve.
+ */
+export async function replaceDraftPlan(
+  userId: string,
+  currency: string,
+  mandateId: string | null,
+  items: Array<{ listingRecordId: string; quantity: number }>
+): Promise<PlanDTO> {
+  const db = getDb();
+  const plan = await getOrCreateDraftPlan(userId, currency);
+  await db.$transaction(async (tx) => {
+    await tx.planItem.deleteMany({ where: { planId: plan.id } });
+    for (const item of items) {
+      await tx.planItem.create({
+        data: { planId: plan.id, listingId: item.listingRecordId, quantity: item.quantity },
+      });
+    }
+    await tx.shoppingPlan.update({
+      where: { id: plan.id },
+      data: { mandateId, status: "DRAFT", currency, updatedAt: new Date() },
+    });
+  });
   return loadPlan(plan.id) as Promise<PlanDTO>;
 }
 

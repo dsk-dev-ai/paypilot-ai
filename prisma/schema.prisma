@@ -201,6 +201,7 @@ model Order {
   consentHash       String?
   items             OrderItem[]
   paymentAttempts   PaymentAttempt[]
+  fulfillment       Fulfillment?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
@@ -312,4 +313,19 @@ model WishlistItem {
 
   @@unique([userId, listingId])
   @@index([userId, addedAt])
+}
+
+// ── Digital fulfillment (license keys / downloads after verified capture) ──
+
+model Fulfillment {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId      String
+  status      String   @default("DELIVERED")
+  items       Json
+  deliveredAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([userId, deliveredAt])
 }

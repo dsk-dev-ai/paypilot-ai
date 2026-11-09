@@ -7,6 +7,10 @@ export type CreateOrderInput = {
   amount: string; // decimal string, e.g. "19.99"
   currency_code: string;
   description?: string;
+  /** Where PayPal sends the buyer after approval / cancellation. */
+  returnUrl?: string;
+  cancelUrl?: string;
+  brandName?: string;
 };
 
 export type PayPalLink = { href: string; rel: string; method?: string };
@@ -74,6 +78,17 @@ export async function createPayPalOrder(
         ...(input.description ? { description: input.description.slice(0, 127) } : {}),
       },
     ],
+    ...(input.returnUrl
+      ? {
+          application_context: {
+            brand_name: (input.brandName ?? "PayPilot AI").slice(0, 127),
+            shipping_preference: "NO_SHIPPING",
+            user_action: "PAY_NOW",
+            return_url: input.returnUrl,
+            cancel_url: input.cancelUrl ?? input.returnUrl,
+          },
+        }
+      : {}),
   };
   const res = await paypalFetch(
     "/v2/checkout/orders",

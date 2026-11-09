@@ -1,4 +1,8 @@
-# PayPilot AI v1.1.0 Implementation Plan
+# PayPilot AI — Implementation Plan (historical)
+
+> This document records the original v1.1.0 plan. The shipped v2.0.0 state is documented in
+> [README.md](./README.md) and [SUBMISSION.md](./SUBMISSION.md): grounded agent planning, human-signed
+> mandates, real PayPal sandbox capture, instant digital fulfillment, and a tamper-evident ledger.
 
 ## Current State
 - Next.js 16.4.2, TypeScript, Tailwind CSS

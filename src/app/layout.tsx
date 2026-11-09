@@ -5,24 +5,24 @@ import { NavLinks, NavMenu, type NavItem } from "@/components/NavLinks";
 import { AmbientBackground } from "@/components/motion/AmbientBackground";
 
 export const metadata: Metadata = {
-  title: "PayPilot AI — Verifiable Agentic Checkout",
+  title: "PayPilot AI — Accountable Purchasing Agent",
   description:
-    "AI-powered commerce and payment orchestration platform for verifiable agentic checkout.",
+    "An AI purchasing agent with human-signed spend mandates, real PayPal sandbox capture, instant digital delivery, and a tamper-evident receipt ledger.",
 };
 
 const primaryNav: NavItem[] = [
-  { href: "/search", label: "Search" },
-  { href: "/assistant", label: "Assistant" },
+  { href: "/store", label: "Store" },
+  { href: "/agent", label: "Agent" },
   { href: "/plan", label: "Plan" },
   { href: "/checkout", label: "Checkout" },
   { href: "/orders", label: "Orders" },
 ];
 
 const moreNav: NavItem[] = [
+  { href: "/dashboard", label: "Control Room" },
+  { href: "/verify", label: "Verify" },
   { href: "/mandate", label: "Policy" },
-  { href: "/wishlist", label: "Saved" },
-  { href: "/notifications", label: "Alerts" },
-  { href: "/account", label: "Account" },
+  { href: "/search", label: "Search" },
   { href: "/status", label: "Status" },
   { href: "/help", label: "Help" },
 ];
@@ -54,16 +54,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="mt-8 border-t border-line">
           <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-xs text-faint sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <p className="max-w-xl">
-              PayPilot AI searches authorized sources and routes you to official retailers. Every purchase
-              is bound to a human-approved consent hash, and we never automate retailer logins or claim
-              cart changes we cannot verify.
+              PayPilot is an accountable purchasing agent. The AI proposes, a deterministic mandate decides,
+              a human signs the exact cart, and real PayPal sandbox funds move — with instant delivery and a
+              tamper-evident receipt you can recompute.
             </p>
             <p className="flex items-center gap-2">
-              <Link href="/help" className="transition-colors hover:text-muted">
-                Help &amp; disclosures
+              <Link href="/verify" className="transition-colors hover:text-muted">
+                Verify a receipt
               </Link>
               <span className="h-1 w-1 rounded-full bg-faint" />
-              <span>v1.0.0</span>
+              <span>v2.0.0</span>
             </p>
           </div>
         </footer>

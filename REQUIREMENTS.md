@@ -1,4 +1,4 @@
-# PayPilot AI — Requirements (v1.1.0)
+# PayPilot AI — Requirements (v2.0.0)
 
 How to run, test, and which API access is needed for each integration.
 
@@ -16,7 +16,8 @@ How to run, test, and which API access is needed for each integration.
 npm install
 cp .env.example .env.local   # fill values — see table below
 docker compose up -d db      # local PostgreSQL (or set DATABASE_URL to Supabase)
-npm run db:migrate           # prisma migrate deploy + generate
+export DATABASE_URL="postgresql://paypilot:paypilot@localhost:5432/paypilot?schema=public"
+npm run db:migrate           # prisma migrate deploy + generate (Prisma CLI does not read .env.local)
 npm run dev                  # http://localhost:3000
 ```
 
@@ -38,11 +39,12 @@ Server-only unless marked `NEXT_PUBLIC`. Real values go in `.env.local` (gitigno
 
 | Variable | Used by | Required for | Where to get it |
 |---|---|---|---|
+| `APP_BASE_URL` | PayPal return/cancel URLs, store links | Public demo URL | `http://localhost:3000` locally |
 | `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET` | PayPal Sandbox checkout | Checkout via PayPal | https://developer.paypal.com/dashboard/applications/sandbox |
 | `PAYPAL_ENV` | PayPal mode gate | `sandbox` (never auto-switches to live) | fixed value |
 | `PAYPAL_API_BASE` | PayPal endpoint | `https://api-m.sandbox.paypal.com` | fixed value |
-| `GEMINI_API_KEY` | AI assistant (Gemini) | NL assistant / recommendations | https://aistudio.google.com/apikey |
-| `GEMINI_MODEL` | AI model name | default `gemini-2.0-flash` | optional |
+| `GEMINI_API_KEY` | Grounded purchasing agent | Gemini planner; deterministic fallback without it | https://aistudio.google.com/apikey |
+| `GEMINI_MODEL` | AI model name | default `gemini-3.6-flash` | optional |
 | `EBAY_CLIENT_ID` / `EBAY_CLIENT_SECRET` | eBay Browse API search | Real eBay product search | https://developer.ebay.com/ → create app → Buy Browse API keys |
 | `EBAY_ENV` | eBay environment | `sandbox` or `production` | eBay dev portal |
 | `FLIPKART_AFFILIATE_ID` / `FLIPKART_AFFILIATE_TOKEN` | Flipkart Affiliate search | Real Flipkart product search | https://affiliate.flipkart.com/ (account approval required) |
@@ -67,7 +69,12 @@ claims live data unless a live request returned it.
 
 - **PayPal** — Orders v2 API, server-side OAuth + create/get/capture, buyer
   approval required, capture verifies amount + currency, idempotent on repeat.
-  Sandbox only unless `PAYPAL_ENV=production` is set explicitly.
+  Sandbox only unless `PAYPAL_ENV=production` is set explicitly. This build is
+  **USD-only** (`PAYPAL_SUPPORTED_CURRENCIES`); the built-in PayPilot Store
+  catalog is priced in USD.
+- **PayPilot Store (built-in)** — merchant of record with the `PAYPILOT_PAYPAL`
+  checkout capability. Capture triggers idempotent digital fulfillment and an
+  `ORDER_FULFILLED` ledger receipt.
 - **eBay Browse API** — product search only (no checkout without separate Buy
   API approval). Requires an eBay developer application; sandbox keys do not
   return production catalog data.
@@ -100,16 +107,17 @@ claims live data unless a live request returned it.
 - Anonymous sessions are random 128-bit ids in an httpOnly cookie; there is no
   account/password system in v1.
 
-## v1.0.0 verification (2026-10-20)
+## v2.0.0 verification (2026-11-09)
 
 | Check | Result |
 |---|---|
-| `npm test` | 112 tests / 11 files passed |
+| `npm test` | 127 tests / 13 files passed (live-Postgres repository tests included) |
 | `npm run typecheck` | clean |
 | `npm run lint` | clean |
 | `npm run build` | production build succeeded |
-| Production smoke (`next start`) | health DB connected; mandate → plan → approve `ALLOW` → checkout idempotent → handoff confirm → order `PENDING_APPROVAL`; all pages HTTP 200 |
-| Live integrations | PayPal sandbox `CONFIGURED` (no live capture during verification); eBay/Flipkart/Gemini `NOT_CONFIGURED` (no credentials) |
+| Production smoke (`next start`) | all pages HTTP 200; dashboard renders AG Grid |
+| Live flow | demo mandate → Gemini proposal (`ALLOW`, $43) → commit → approve (SHA-256 consent) → checkout creates **real PayPal sandbox order** → dashboard + verifier show consent/ledger checks passing |
+| Live integrations | PayPal sandbox `VERIFIED`; Gemini `CONFIGURED` (live proposal returned); eBay/Flipkart optional |
 
 ## What tests do and do not do
 

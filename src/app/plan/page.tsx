@@ -17,6 +17,7 @@ type PlanItem = {
   currency: string;
   availability: string;
   seller?: string;
+  attributes?: Record<string, string | number | boolean>;
   quantity: number;
   approvedPriceMinor: number | null;
   approvedAt: string | null;
@@ -168,11 +169,18 @@ export default function PlanPage() {
   if (!plan || plan.items.length === 0) {
     return (
       <div className="space-y-6 animate-fade-up">
-        <SectionTitle title="Shopping plan" subtitle="Your unified Mandate plan across merchants." />
+        <SectionTitle title="Shopping plan" subtitle="The exact cart the agent proposed and a human will sign." />
         <EmptyState
           title="Your plan is empty"
-          body="Search for products and add real listings to your plan. Mandate's plan is not a retailer cart — each merchant checkout happens on the merchant's own site."
-          action={<ButtonLink href="/search">Search products</ButtonLink>}
+          body="Ask the purchasing agent for a grounded proposal, or add a digital product from the PayPilot Store. Nothing is charged until you approve the cart and complete PayPal checkout."
+          action={
+            <div className="flex flex-wrap justify-center gap-2">
+              <ButtonLink href="/agent">Ask the agent</ButtonLink>
+              <ButtonLink href="/store" variant="secondary">
+                Browse the store
+              </ButtonLink>
+            </div>
+          }
         />
       </div>
     );
@@ -220,7 +228,11 @@ export default function PlanPage() {
                         {it.imageUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={it.imageUrl} alt="" className="h-full w-full object-contain" />
-                        ) : null}
+                        ) : (
+                          <span className="flex h-full w-full items-center justify-center text-xl">
+                            {typeof it.attributes?.emoji === "string" ? it.attributes.emoji : "📦"}
+                          </span>
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{it.title}</p>
@@ -263,7 +275,9 @@ export default function PlanPage() {
                   ))}
                 </ul>
                 <div className="border-t border-line px-4 py-2.5 text-[11px] text-faint">
-                  Checkout for {provider} items happens on {provider}&apos;s official website.
+                  {provider === "paypilot"
+                    ? "PayPilot Store is the merchant of record. PayPal sandbox capture funds this order and delivery is instant."
+                    : `Checkout for ${provider} items happens on ${provider}'s official website.`}
                 </div>
               </Card>
             );
@@ -278,7 +292,8 @@ export default function PlanPage() {
               <span className="text-xl font-semibold">{formatMinor(plan.subtotalMinor, plan.currency)}</span>
             </div>
             <p className="text-[11px] text-faint">
-              Estimated — shipping and taxes are not included and may be added by each merchant at their checkout.
+              Digital goods: no shipping. USD prices are final for the built-in PayPilot Store; external
+              merchants may add their own taxes at checkout.
             </p>
             {mandates.length > 0 ? (
               <Select value={mandateId} onChange={(e) => setMandateId(e.target.value)} aria-label="Mandate">
@@ -310,6 +325,9 @@ export default function PlanPage() {
             <Button className="w-full" variant="ghost" disabled={busy} onClick={() => void cancelPlan()}>
               Cancel plan
             </Button>
+            <ButtonLink href="/agent" variant="outline" size="sm" className="w-full">
+              Ask the agent to rebuild
+            </ButtonLink>
           </Card>
 
           {evaluation ? (

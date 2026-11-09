@@ -2,12 +2,41 @@
 
 **An AI that can shop. A mandate that keeps it honest.**
 
-PayPilot is an accountable purchasing agent for the PayPal AI Hackathon. You describe a goal. The agent
-builds a plan from a real, server-side catalog. A **human-signed spending mandate** caps what it can buy.
-A real **PayPal sandbox capture** is the only way money moves. Digital goods are delivered instantly, and
-every step is written to a **tamper-evident receipt chain** you can recompute.
+<p align="center">
+  <a href="https://paypilot-ai-14gl.onrender.com"><img alt="Live demo" src="https://img.shields.io/badge/LIVE_DEMO-paypilot--ai--14gl.onrender.com-6D8DFF?style=for-the-badge&logo=render&logoColor=white"></a>
+  <a href="https://github.com/dsk-dev-ai/paypilot-ai"><img alt="GitHub repo" src="https://img.shields.io/badge/GitHub-dsk--dev--ai%2Fpaypilot--ai-181717?style=for-the-badge&logo=github&logoColor=white"></a>
+</p>
+
+<p align="center">
+  <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white">
+  <img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=000000">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white">
+  <img alt="Prisma 6" src="https://img.shields.io/badge/Prisma-6-2D3748?style=flat-square&logo=prisma&logoColor=white">
+  <img alt="PostgreSQL 16" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white">
+  <img alt="Google Gemini" src="https://img.shields.io/badge/Gemini-gemini--3.6--flash-8E75B2?style=flat-square&logo=googlegemini&logoColor=white">
+  <img alt="PayPal sandbox" src="https://img.shields.io/badge/PayPal-Orders_v2_sandbox-003087?style=flat-square&logo=paypal&logoColor=white">
+  <img alt="127 tests" src="https://img.shields.io/badge/tests-127_passing-2EA44F?style=flat-square">
+  <img alt="MIT license" src="https://img.shields.io/badge/license-MIT-2EA44F?style=flat-square">
+</p>
+
+**PayPilot AI is an accountable AI shopping agent built for the PayPal AI Hackathon.** You describe a
+goal. The agent builds a plan from a real, server-side catalog. A **human-signed spending mandate** caps
+what it can buy. A real **PayPal sandbox capture** is the only way money moves. Digital goods are
+delivered instantly, and every step is written to a **tamper-evident receipt chain** you can recompute.
 
 No invoice-only mock. No "click here and trust us" success page. The full loop is real.
+
+> **Agentic commerce · autonomous purchasing · AI agent safety · verifiable consent · PayPal sandbox ·
+> receipt ledger.** If you are looking for a working example of an AI agent that can spend money without
+> being trusted blindly, this is it.
+
+### Try it now
+
+| 🚀 Live demo | 🤖 Run the agent | 🧾 Verify a receipt | 🛠 Control room |
+| --- | --- | --- | --- |
+| [paypilot-ai-14gl.onrender.com](https://paypilot-ai-14gl.onrender.com) | [Open `/agent`](https://paypilot-ai-14gl.onrender.com/agent) | [Open `/verify`](https://paypilot-ai-14gl.onrender.com/verify) | [Open `/dashboard`](https://paypilot-ai-14gl.onrender.com/dashboard) |
+
+![PayPilot AI — accountable purchasing agent](docs/screenshots/home.png)
 
 ---
 
@@ -41,6 +70,22 @@ and a PostgreSQL hash-chained ledger.
 
 > The `$100` budget, `paypilot` provider allowlist, and `US` destination are the demo defaults. Edit or
 > create mandates under **Policy** to change them.
+
+---
+
+## Screens
+
+| PayPilot Store | Grounded purchasing agent |
+| --- | --- |
+| ![PayPilot Store](docs/screenshots/store.png) | ![Purchasing agent](docs/screenshots/agent.png) |
+
+| Consent-gated checkout | PayPal sandbox order |
+| --- | --- |
+| ![Checkout consent](docs/screenshots/checkout.png) | ![PayPal order](docs/screenshots/checkout-paypal.png) |
+
+| Receipt verifier | Live status |
+| --- | --- |
+| ![Receipt verifier](docs/screenshots/verify.png) | [Health check](https://paypilot-ai-14gl.onrender.com/api/health) |
 
 ---
 
@@ -289,6 +334,22 @@ prisma/
 - Capture is idempotent; a refreshed return URL cannot charge twice.
 - Digital fulfillment is idempotent and only runs for the built-in store after `PAID`.
 - The ledger is append-only from the app’s perspective and verified by recomputation.
+
+## Keywords and topics
+
+`ai-agents` · `agentic-commerce` · `ai-shopping-agent` · `autonomous-agents` · `ai-safety` ·
+`spending-mandates` · `verifiable-consent` · `paypal` · `paypal-sandbox` · `paypal-ai-hackathon` ·
+`nextjs` · `react` · `typescript` · `prisma` · `postgresql` · `google-gemini` · `ag-grid` ·
+`hackathon` · `digital-goods` · `receipt-ledger`
+
+---
+
+## Star the repo
+
+If PayPilot helps you think about accountable AI agents, give it a ⭐ and share it — it helps more
+builders find the demo.
+
+---
 
 ## License
 

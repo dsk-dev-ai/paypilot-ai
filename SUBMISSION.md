@@ -149,8 +149,7 @@ PayPal pays. The ledger proves.”
 npm install
 cp .env.example .env.local     # add PayPal sandbox + optional Gemini key
 docker compose up -d db
-export DATABASE_URL="postgresql://paypilot:paypilot@localhost:5432/paypilot?schema=public"
-npm run db:migrate
+npm run db:migrate             # reads .env.local automatically
 npm run dev
 ```
 

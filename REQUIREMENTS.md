@@ -16,8 +16,7 @@ How to run, test, and which API access is needed for each integration.
 npm install
 cp .env.example .env.local   # fill values — see table below
 docker compose up -d db      # local PostgreSQL (or set DATABASE_URL to Supabase)
-export DATABASE_URL="postgresql://paypilot:paypilot@localhost:5432/paypilot?schema=public"
-npm run db:migrate           # prisma migrate deploy + generate (Prisma CLI does not read .env.local)
+npm run db:migrate           # loads .env.local, applies migrations, regenerates the client
 npm run dev                  # http://localhost:3000
 ```
 

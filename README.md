@@ -153,13 +153,8 @@ docker compose up -d db
 npm run db:migrate
 ```
 
-If `npm run db:migrate` cannot see `DATABASE_URL`, export it first (Prisma CLI does not read
-`.env.local`):
-
-```bash
-export DATABASE_URL="postgresql://paypilot:paypilot@localhost:5432/paypilot?schema=public"
-npm run db:migrate
-```
+`db:migrate` loads `.env.local` for you (Next.js does this automatically; the Prisma CLI does not, so
+`scripts/run-with-env.mjs` bridges the gap). It applies every migration and regenerates the client.
 
 ### 4. Run
 

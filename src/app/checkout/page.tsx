@@ -148,6 +148,9 @@ export default function CheckoutPage() {
     );
   }
 
+  const hasStarted =
+    plan?.status === "CHECKOUT_IN_PROGRESS" || plan?.status === "CHECKED_OUT";
+
   if (!plan || plan.status === "DRAFT") {
     return (
       <div className="space-y-6 animate-fade-up">
@@ -230,6 +233,19 @@ export default function CheckoutPage() {
 
       {checkout && checkout.intents.length > 0 ? (
         <div className="space-y-4">
+          {!hasStarted ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                disabled={busy || !consent || !!consent.revokedAt || !!consent.consumedAt}
+                onClick={() => void startCheckout()}
+              >
+                {busy ? <Spinner /> : null} Start checkout routing
+              </Button>
+              <p className="text-xs text-faint">
+                Review the merchant group below, then start checkout to create the PayPal order.
+              </p>
+            </div>
+          ) : null}
           {checkout.intents.map((it) => (
             <Card key={it.provider} className="p-5 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -242,27 +258,38 @@ export default function CheckoutPage() {
                 <span className="text-sm font-semibold">{formatMinor(it.subtotalMinor, it.currency)}</span>
               </div>
               <p className="text-xs text-muted">{it.reason}</p>
-              <div className="flex flex-wrap items-center gap-2">
-                {it.method === "PAYPILOT_PAYPAL" && it.approveUrl ? (
-                  <a href={it.approveUrl} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm">Approve payment on PayPal ↗</Button>
-                  </a>
-                ) : (
-                  <a href={it.officialUrl} target="_blank" rel="noopener noreferrer nofollow">
-                    <Button size="sm">Open {it.provider} checkout ↗</Button>
-                  </a>
-                )}
-                {it.method === "EXTERNAL_CHECKOUT" && it.handoffId && it.handoffState !== "CONFIRMED" ? (
-                  <Button size="sm" variant="secondary" disabled={busy} onClick={() => void confirmHandoff(it.handoffId!)}>
-                    I completed this purchase
-                  </Button>
-                ) : null}
-                {it.method === "PAYPILOT_PAYPAL" && it.orderId ? (
-                  <ButtonLink href={`/checkout/return?orderId=${it.orderId}`} size="sm" variant="secondary">
-                    I approved on PayPal — verify
-                  </ButtonLink>
-                ) : null}
-              </div>
+              {hasStarted ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  {it.method === "PAYPILOT_PAYPAL" && it.approveUrl ? (
+                    <a href={it.approveUrl} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm">Approve payment on PayPal ↗</Button>
+                    </a>
+                  ) : it.method === "PAYPILOT_PAYPAL" && it.orderId ? (
+                    <span className="text-xs text-warn">
+                      PayPal order exists, but the approval link is not ready. Refresh this page.
+                    </span>
+                  ) : (
+                    <a href={it.officialUrl} target="_blank" rel="noopener noreferrer nofollow">
+                      <Button size="sm">Open {it.provider} checkout ↗</Button>
+                    </a>
+                  )}
+                  {it.method === "EXTERNAL_CHECKOUT" && it.handoffId && it.handoffState !== "CONFIRMED" ? (
+                    <Button size="sm" variant="secondary" disabled={busy} onClick={() => void confirmHandoff(it.handoffId!)}>
+                      I completed this purchase
+                    </Button>
+                  ) : null}
+                  {it.method === "PAYPILOT_PAYPAL" && it.orderId ? (
+                    <ButtonLink href={`/checkout/return?orderId=${it.orderId}`} size="sm" variant="secondary">
+                      I approved on PayPal — verify
+                    </ButtonLink>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="text-[11px] text-faint">
+                  A PayPal order is created when you start checkout. Nothing is charged until you approve
+                  it on PayPal.
+                </p>
+              )}
               {it.handoffState === "CONFIRMED" ? (
                 <p className="text-[11px] text-faint">
                   Recorded as self-reported. Mandate cannot verify retailer-side purchases.

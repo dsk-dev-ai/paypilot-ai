@@ -116,6 +116,13 @@ export default function CheckoutPage() {
       setCheckout(data.checkout);
       setConsent(data.consent ?? consent);
       setNotice("routed");
+      const paypal = data.checkout?.intents?.find(
+        (it: Intent) => it.method === "PAYPILOT_PAYPAL" && it.approveUrl
+      );
+      if (paypal?.approveUrl) {
+        window.location.assign(paypal.approveUrl);
+        return;
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Checkout failed");
     } finally {

@@ -13,7 +13,7 @@ import { getProvider } from "@/lib/providers/registry";
 import { routeCheckout, type CheckoutIntent, type CheckoutPlanItem } from "@/lib/checkout/router";
 import { getPayPalStatus, getPayPalApproveUrl, PAYPAL_SUPPORTED_CURRENCIES } from "@/modules/payments/config";
 import { createPayPalOrder, getApproveUrl } from "@/modules/payments/client";
-import { getAppBaseUrl } from "@/lib/config/app";
+import { getRequestBaseUrl } from "@/lib/config/app";
 import { recordAuditEvent } from "@/lib/db/audit";
 import type { ProviderCapabilities } from "@/lib/core/provider";
 import { rateLimit } from "@/lib/http/api";
@@ -341,7 +341,7 @@ export async function POST(req: NextRequest) {
       if (!paypalOrderId) {
         try {
           const requestId = `mandate_${sha256Hex(`${plan.id}:${intent.provider}:${consent.contentHash}`).slice(0, 48)}`;
-          const base = getAppBaseUrl();
+          const base = await getRequestBaseUrl();
           const ppOrder = await createPayPalOrder(
             {
               amount: (subtotal / 100).toFixed(2),

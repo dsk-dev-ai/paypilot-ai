@@ -164,7 +164,23 @@ npm run dev
 
 Open <http://localhost:3000>, go to **Agent**, and create the demo budget.
 
-For a deployed demo, set `APP_BASE_URL` to the public HTTPS URL so PayPal can return the buyer there.
+For a deployed demo, PayPal return/cancel URLs are derived from the incoming request's
+`x-forwarded-host` / `x-forwarded-proto` headers (so Render, Fly, Vercel, and similar proxies work without
+extra config). Set `APP_BASE_URL` to the public HTTPS URL when you also want canonical store links to use
+the deployed origin.
+
+### Deploy on Render
+
+The live demo runs on Render's free tier:
+
+- **Build:** `npm ci && npx prisma generate && npm run build`
+- **Start:** `npx prisma migrate deploy && npm start`
+- **Health check:** `/api/health`
+- **Env:** `DATABASE_URL`, `APP_BASE_URL`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`,
+  `PAYPAL_ENV=sandbox`, `PAYPAL_API_BASE`, `GEMINI_API_KEY`, `NODE_VERSION=22`
+
+Migrations run on every start, so a fresh Render Postgres is provisioned automatically. Free Postgres
+instances expire after 30 days; point `DATABASE_URL` at a persistent database before then.
 
 ---
 
@@ -173,7 +189,7 @@ For a deployed demo, set `APP_BASE_URL` to the public HTTPS URL so PayPal can re
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `APP_BASE_URL` | Recommended | Absolute base for PayPal return/cancel URLs and canonical store links |
+| `APP_BASE_URL` | Optional | Overrides the request-derived origin for canonical store links; PayPal return URLs fall back to request headers |
 | `PAYPAL_CLIENT_ID` | Yes for payment | PayPal REST app client id |
 | `PAYPAL_CLIENT_SECRET` | Yes for payment | PayPal REST app secret |
 | `PAYPAL_ENV` | No | `sandbox` (default) or `production` |

@@ -7,7 +7,8 @@ purchase, a human-signed mandate decides what is allowed, real PayPal sandbox mo
 are delivered instantly, and a tamper-evident receipt lets anyone recompute what happened.
 
 - **Repo:** https://github.com/dsk-dev-ai/paypilot-ai
-- **Live demo:** _add your deployed URL here_
+- **Live demo:** https://paypilot-ai-14gl.onrender.com
+- **Health check:** https://paypilot-ai-14gl.onrender.com/api/health
 - **Video:** _add your 3-minute demo link here_
 - **License:** MIT
 

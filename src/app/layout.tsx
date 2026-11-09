@@ -4,6 +4,12 @@ import "./globals.css";
 import { NavLinks, NavMenu, type NavItem } from "@/components/NavLinks";
 import { AmbientBackground } from "@/components/motion/AmbientBackground";
 
+/**
+ * The app reads live cart/order state and must not serve year-old cached HTML
+ * after a deploy. Every page is dynamic; API routes are already dynamic.
+ */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "PayPilot AI — Accountable Purchasing Agent",
   description:
